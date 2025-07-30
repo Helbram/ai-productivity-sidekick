@@ -9,6 +9,8 @@ export default NextAuth({
             authorization: {
                 params: {
                     scope: "openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly",
+                    access_type: "offline",
+                    prompt: "consent",
                 },
             },
         }),
@@ -16,14 +18,21 @@ export default NextAuth({
     callbacks: {
         async jwt({ token, account }) {
             // Save the accessToken to the token
+            //console.log("JWT callback: token before", token);
             if (account) {
+                //console.log("Account:", account);
                 token.accessToken = account.access_token;
+                token.refreshToken = account.refresh_token;
+                token.expiresAt = account.expires_at;
             }
+            //console.log("JWT callback: token after", token);
             return token;
         },
         async session({ session, token }) {
             // Pass accessToken to the client session
+            //console.log("Session callback: token", token);
             session.accessToken = token.accessToken;
+            //console.log("Session callback: session", session);
             return session;
         },
     },
