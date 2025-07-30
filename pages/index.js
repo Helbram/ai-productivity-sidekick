@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function Home() {
+  const { data: session } = useSession();
   const [emailText, setEmailText] = useState("Hi John, just a reminder that we need the budget report by Thursday. Also, make sure to send the slides to the client before 2 PM meeting.");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -64,38 +66,52 @@ export default function Home() {
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial", color: "white", backgroundColor: "#1a1a1a", minHeight: "100vh" }}>
-      <h1>Email Summarizer</h1>
+      <h1>AI Productivity Sidekick</h1>
 
-      <textarea
-        rows={6}
-        value={emailText}
-        onChange={(e) => setEmailText(e.target.value)}
-        style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem", fontSize: "1rem" }}
-      />
+      {!session ? (
+        <>
+          <button onClick={() => signIn("google")}>Sign in with Google</button>
+        </>
+      ) : (
+        <>
+          <p>Signed in as {session.user.email}</p>
+          <button onClick={() => signOut()}>Sign out</button>
+          <p style={{ fontSize: "0.9rem", color: "#ccc" }}>
+            Access Token: {session.accessToken ? "Available" : "Missing"}
+          </p>
 
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <button onClick={handleRefresh} disabled={loading}>
-          {loading ? "Summarizing..." : "Refresh Priorities"}
-        </button>
-        <button onClick={() => {
-          localStorage.clear();
-          setResult("");
-          setMessage("Cache cleared.");
-        }}>
-          Clear Cache
-        </button>
-      </div>
+          <textarea
+            rows={6}
+            value={emailText}
+            onChange={(e) => setEmailText(e.target.value)}
+            style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem", fontSize: "1rem" }}
+          />
 
-      {message && <p style={{ color: "#ccc" }}>{message}</p>}
+          <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+            <button onClick={handleRefresh} disabled={loading}>
+              {loading ? "Summarizing..." : "Refresh Priorities"}
+            </button>
+            <button onClick={() => {
+              localStorage.clear();
+              setResult("");
+              setMessage("Cache cleared.");
+            }}>
+              Clear Cache
+            </button>
+          </div>
 
-      <div style={{ marginTop: "1.5rem", whiteSpace: "pre-wrap" }}>
-        {result && (
-          <>
-            <h3>AI Output</h3>
-            <p>{result}</p>
-          </>
-        )}
-      </div>
+          {message && <p style={{ color: "#ccc" }}>{message}</p>}
+
+          <div style={{ marginTop: "1.5rem", whiteSpace: "pre-wrap" }}>
+            {result && (
+              <>
+                <h3>AI Output</h3>
+                <p>{result}</p>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
