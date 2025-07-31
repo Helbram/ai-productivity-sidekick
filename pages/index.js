@@ -27,7 +27,7 @@ export default function Dashboard() {
                 setRemainingRefreshes(data.refreshInfo.remaining);
                 setRefreshLimitReached(data.refreshInfo.remaining === 0);
             }
-            
+
             setError('');
         } catch (err) {
             console.error("Failed to load briefing:", err);
@@ -90,7 +90,7 @@ export default function Dashboard() {
             )}
             {refreshLimitReached && (
                 <p style={{ color: 'orange' }}>
-                    You've used all your daily refreshes. Try again tomorrow or upgrade your plan.
+                    You&apos;ve used all your daily refreshes. Try again tomorrow or upgrade your plan.
                 </p>
             )}
 
