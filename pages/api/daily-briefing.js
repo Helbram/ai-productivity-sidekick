@@ -82,7 +82,11 @@ export default async function handler(req, res) {
 
             const summary = chatResponse.choices[0].message.content;
 
-            res.status(200).json({ summary });
+            res.status(200).json({
+                summary,
+                emailSnippets,
+                events,
+            });
         } catch (openaiErr) {
             console.error("OpenAI error:", openaiErr);
             throw new Error("Failed to call OpenAI");
