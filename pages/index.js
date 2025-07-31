@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useSession, signIn } from "next-auth/react";
 import Layout from "@/components/Layout";
 
 export default function Dashboard() {
+    const { data: session, status } = useSession();
     const [summary, setSummary] = useState('');
     const [emailSnippets, setEmailSnippets] = useState([]);
     const [events, setEvents] = useState([]);
@@ -38,8 +40,10 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        fetchBriefing();
-    }, []);
+        if (status === "authenticated") {
+            fetchBriefing();
+        }
+    }, [status]);
 
     const handleRefresh = async () => {
         setRefreshing(true);
@@ -73,6 +77,20 @@ export default function Dashboard() {
             setRefreshing(false);
             setLoading(false);
         }
+    }
+
+    if (status === "loading") {
+        return <Layout><p>Checking authentication...</p></Layout>;
+    }
+
+    if (status === "unauthenticated") {
+        return (
+            <Layout>
+                <h1>Please Sign In</h1>
+                <p>You must be logged in to access your daily briefing.</p>
+                <button onClick={() => signIn()}>Sign In</button>
+            </Layout>
+        );
     }
 
     return (
