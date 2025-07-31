@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Layout from "@/components/Layout";
 
 export default function Dashboard() {
     const [summary, setSummary] = useState('');
@@ -28,7 +29,7 @@ export default function Dashboard() {
     }, []);
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '800px', margin: 'auto' }}>
+        <Layout>
             <h1>Daily Briefing</h1>
             <h2>Summary</h2>
 
@@ -55,6 +56,6 @@ export default function Dashboard() {
                     </ul>
                 </>
             )}
-        </div>
+        </Layout>
     );
 }
