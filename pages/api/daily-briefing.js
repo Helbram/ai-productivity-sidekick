@@ -1,9 +1,9 @@
 import { getGoogleClient } from "@/lib/googleClient";
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 
-const openai = new OpenAIApi(
-    new Configuration({ apiKey: process.env.OPENAI_API_KEY })
-);
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
 export default async function handler(req, res) {
     try {
@@ -62,14 +62,31 @@ export default async function handler(req, res) {
         Give a concise summary with key tasks, time-sensitive items, and any high-priority issues.
         `;
 
-        const aiResponse = await openai.createChatCompletion({
-            model: "gpt-4o",
-            messages: [{ role: "user", content: prompt }],
-        });
+        let chatResponse;
+        try {
+            const chatResponse = await openai.chat.completions.create({
+                model: "gpt-4o",
+                messages: [{ role: "user", content: prompt }],
+            });
 
-        const summary = aiResponse.data.choices[0].message.content;
+            console.log("OpenAI response data:", chatResponse);
 
-        res.status(200).json({ summary });
+            // Defensive check
+            if (
+                !chatResponse ||
+                !Array.isArray(chatResponse.choices) ||
+                chatResponse.choices.length === 0
+            ) {
+                throw new Error("No choices returned from OpenAI");
+            }
+
+            const summary = chatResponse.choices[0].message.content;
+
+            res.status(200).json({ summary });
+        } catch (openaiErr) {
+            console.error("OpenAI error:", openaiErr);
+            throw new Error("Failed to call OpenAI");
+        }
     } catch (err) {
         console.error("Briefing error:", err);
         res.status(500).json({ error: "Failed to generate daily briefing" });

@@ -32,6 +32,7 @@ export default NextAuth({
             // Pass accessToken to the client session
             //console.log("Session callback: token", token);
             session.accessToken = token.accessToken;
+            session.refreshToken = token.refreshToken;
             //console.log("Session callback: session", session);
             return session;
         },
