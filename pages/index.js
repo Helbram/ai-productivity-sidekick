@@ -9,23 +9,27 @@ export default function Dashboard() {
     const [error, setError] = useState('');
     const [refreshing, setRefreshing] = useState(false);
 
-    useEffect(() => {
-        const fetchBriefing = async () => {
-            try {
-                const res = await fetch('/api/daily-briefing');
-                if (!res.ok) throw new Error('Failed to fetch daily briefing');
-                const data = await res.json();
-                setSummary(data.summary);
-                setEmailSnippets(data.emailSnippets);
-                setEvents(data.events);
-            } catch (err) {
-                console.error(err);
-                setError('Failed to load briefing.');
-            } finally {
-                setLoading(false);
+    const fetchBriefing = async () => {
+        try {
+            const res = await fetch('/api/daily-briefing');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to fetch daily briefing');
             }
-        };
+            const data = await res.json();
+            setSummary(data.summary);
+            setEmailSnippets(data.emailSnippets);
+            setEvents(data.events);
+            setError('');
+        } catch (err) {
+            console.error("Failed to load briefing:", err);
+            setError('Failed to load briefing.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchBriefing();
     }, []);
 
@@ -34,10 +38,13 @@ export default function Dashboard() {
         setLoading(true);
         try {
             const res = await fetch('/api/refresh-briefing');
-            if (!res.ok) throw new Error('Failed to refresh daily briefing');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to refresh daily briefing');
+            }
             await fetchBriefing();
         } catch (err) {
-            console.error(err);
+            console.error("Failed to refresh briefing:", err);
             setError('Failed to refresh briefing.');
         } finally {
             setRefreshing(false);
