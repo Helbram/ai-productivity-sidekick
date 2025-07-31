@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { supabase } from "@/lib/supabaseClient";
 
 export default NextAuth({
     providers: [
@@ -36,5 +37,29 @@ export default NextAuth({
             //console.log("Session callback: session", session);
             return session;
         },
+        async signIn({ user }) {
+            try {
+                const { supabase } = await import("@/lib/supabaseClient");
+
+                const { error } = await supabase
+                    .from("profiles")
+                    .upsert({
+                        email: user.email,
+                        name: user.name || null,
+                        // plan: 'free' - optional, defaults via supabase schema
+                    }, {
+                        onConflict: "email", // prevent duplicate rows
+                    });
+
+                if (error) {
+                    console.error("Error inserting into profiles:", error);
+                    // Optionally: return false to block login
+                }
+            } catch (err) {
+                console.error("Unexpected error in signIn callback:", err);
+            }
+
+            return true; // Always allow sign in
+        }
     },
 });

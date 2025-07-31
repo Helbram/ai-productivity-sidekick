@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import { generateBriefing } from "@/lib/generateBriefing";
+import { supabase } from "@/lib/supabaseClient";
 
 let cachedBriefing = null;
 let lastGeneratedAt = null;
@@ -46,7 +47,7 @@ export default async function handler(req, res) {
     // }
 
     try {
-        const newBriefing = await generateBriefing(req, res);
+        const newBriefing = await generateBriefing(req, res, session);
 
         cachedBriefing = newBriefing;
         lastGeneratedAt = new Date();
