@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 import { generateBriefing } from "@/lib/generateBriefing";
 
-// ✅ Local in-memory cache
+// Local in-memory cache
 let cachedBriefing = null;
 let lastGeneratedAt = null;
 
@@ -12,14 +12,14 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // ✅ Return existing cache if available
+    // Return existing cache if available
     if (cachedBriefing) {
         console.log("Returning cached briefing");
         return res.status(200).json(cachedBriefing);
     }
 
     try {
-        // ✅ First time load (or after server restart)
+        // First time load (or after server restart)
         const newBriefing = await generateBriefing(req, res);
         cachedBriefing = newBriefing;
         lastGeneratedAt = new Date();
