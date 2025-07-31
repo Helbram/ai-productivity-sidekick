@@ -30,12 +30,20 @@ export default async function handler(req, res) {
     const hoursSince = last ? (now - last) / (1000 * 60 * 60) : Infinity;
     const limit = REFRESH_LIMITS[userData.plan];
 
-    // Check if refresh limit reached
+    // Block if over limit
     if (hoursSince < 24 && userData.count >= limit) {
-        return res.status(429).json({
-            error: `Daily refresh limit reached (${limit}). Try again later.`,
+        return res.status(200).json({
+            limitReached: true,
+            remaining: 0,
         });
     }
+
+    // Check if refresh limit reached
+    // if (hoursSince < 24 && userData.count >= limit) {
+    //     return res.status(429).json({
+    //         error: `Daily refresh limit reached (${limit}). Try again later.`,
+    //     });
+    // }
 
     try {
         const newBriefing = await generateBriefing(req, res);
@@ -49,7 +57,13 @@ export default async function handler(req, res) {
             plan: userData.plan,
         });
 
-        return res.status(200).json(newBriefing);
+        const remaining = limit - (hoursSince >= 24 ? 1 : userData.count + 1)
+
+        return res.status(200).json({
+            ...newBriefing,
+            limitReached: false,
+            remaining,
+        });
     } catch (err) {
         console.error("Refresh briefing failed:", err.stack || err);
         return res.status(500).json({ error: "Failed to refresh briefing." });
