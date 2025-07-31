@@ -7,6 +7,7 @@ export default function Dashboard() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         const fetchBriefing = async () => {
@@ -28,9 +29,30 @@ export default function Dashboard() {
         fetchBriefing();
     }, []);
 
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        setLoading(true);
+        try {
+            const res = await fetch('/api/refresh-briefing');
+            if (!res.ok) throw new Error('Failed to refresh daily briefing');
+            await fetchBriefing();
+        } catch (err) {
+            console.error(err);
+            setError('Failed to refresh briefing.');
+        } finally {
+            setRefreshing(false);
+            setLoading(false);
+        }
+    }
+
     return (
         <Layout>
             <h1>Daily Briefing</h1>
+
+            <button onClick={handleRefresh} disabled={refreshing || loading}>
+                {refreshing ? "Refreshing..." : "Refresh Briefing"}
+            </button>
+
             <h2>Summary</h2>
 
             {loading && <p>Loading...</p>}

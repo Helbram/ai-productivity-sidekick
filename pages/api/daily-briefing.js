@@ -1,11 +1,20 @@
 import { getGoogleClient } from "@/lib/googleClient";
 import OpenAI from "openai";
 
+let cachedBriefing = null;
+let lastGeneratedAt = null;
+
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
 export default async function handler(req, res) {
+    // Return cached results unless manually refreshed
+    if (cachedBriefing) {
+        console.log("Returning cached briefing");
+        return res.status(200).json(cachedBriefing);
+    }
+    
     try {
         const { gmail, calendar } = await getGoogleClient(req, res);
 
@@ -69,7 +78,7 @@ export default async function handler(req, res) {
                 messages: [{ role: "user", content: prompt }],
             });
 
-            console.log("OpenAI response data:", chatResponse);
+            //console.log("OpenAI response data:", chatResponse);
 
             // Defensive check
             if (
@@ -82,11 +91,14 @@ export default async function handler(req, res) {
 
             const summary = chatResponse.choices[0].message.content;
 
-            res.status(200).json({
+            cachedBriefing = {
                 summary,
                 emailSnippets,
                 events,
-            });
+            };
+            lastGeneratedAt = new Date();
+
+            return res.status(200).json(cachedBriefing);
         } catch (openaiErr) {
             console.error("OpenAI error:", openaiErr);
             throw new Error("Failed to call OpenAI");
