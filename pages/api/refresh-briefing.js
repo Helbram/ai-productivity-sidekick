@@ -56,9 +56,9 @@ export default async function handler(req, res) {
         });
     } catch (err) {
         if (err?.code === "GOOGLE_DISCONNECTED" || err?.message === "GOOGLE_DISCONNECTED") {
-            return res.status(401).json({ error: "google_disconnected" });
+            return sendError(res, 401, "GOOGLE_DISCONNECTED", "Google account disconnected");
         }
         console.error("Refresh briefing failed:", err.stack || err);
-        return res.status(500).json({ error: "Failed to refresh briefing." });
+        return sendError(res, 500, "REFRESH_BRIEFING_FAILED", "Failed to refresh briefing.");
     }
 }

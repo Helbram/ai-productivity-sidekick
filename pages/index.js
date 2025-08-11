@@ -48,9 +48,26 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        if (status === "authenticated") {
-            fetchBriefing();
-        }
+        const go = async () => {
+            if (status !== "authenticated") return;
+
+            // 1) check google health first
+            try {
+                const r = await fetch("/api/health/google");
+                const d = await r.json();
+                if (d?.ok === false && d?.errorCode === "GOOGLE_DISCONNECTED") {
+                    setShowReconnect(true);
+                    setError("Your Google account is disconnected. Please reconnect.");
+                    setLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.warn("Health check failed (non-blocking):", e);
+            }
+
+            await fetchBriefing();
+        };
+        go();
     }, [status]);
 
     const handleRefresh = async () => {
