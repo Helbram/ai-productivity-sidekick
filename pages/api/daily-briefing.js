@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
         // Use cached version if available
         if (cachedBriefing) {
-            console.log("Returning cached briefing");
+            //console.log("Returning cached briefing");
             return res.status(200).json({
                 ...cachedBriefing,
                 refreshInfo: { remaining, limit },
@@ -49,6 +49,9 @@ export default async function handler(req, res) {
             refreshInfo: { remaining, limit },
         });
     } catch (err) {
+        if (err?.code === "GOOGLE_DISCONNECTED" || err?.message === "GOOGLE_DISCONNECTED") {
+            return res.status(401).json({ error: "google_disconnected" });
+        }
         console.error("Daily briefing failed:", err.stack || err);
         return res.status(500).json({ error: "Failed to load daily briefing." });
     }

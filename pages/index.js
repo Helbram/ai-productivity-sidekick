@@ -12,15 +12,22 @@ export default function Dashboard() {
     const [refreshing, setRefreshing] = useState(false);
     const [refreshLimitReached, setRefreshLimitReached] = useState(false);
     const [remainingRefreshes, setRemainingRefreshes] = useState(null);
+    const [showReconnect, setShowReconnect] = useState(false);
 
     const fetchBriefing = async () => {
         try {
             const res = await fetch('/api/daily-briefing');
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || 'Failed to fetch daily briefing');
-            }
             const data = await res.json();
+
+            if (!res.ok) {
+                if (data?.error === "google_disconnected") {
+                    setError("Your Google account is disconnected. Please reconnect.");
+                    setShowReconnect(true);
+                    return;
+                }
+                throw new Error(data.error || 'Failed to fetch daily briefing');
+            }
+
             setSummary(data.summary);
             setEmailSnippets(data.emailSnippets);
             setEvents(data.events);
@@ -31,6 +38,7 @@ export default function Dashboard() {
             }
 
             setError('');
+            setShowReconnect(false);
         } catch (err) {
             console.error("Failed to load briefing:", err);
             setError('Failed to load briefing.');
@@ -55,6 +63,11 @@ export default function Dashboard() {
             const data = await res.json();
 
             if (res.status !== 200) {
+                if (data?.error === "google_disconnected") {
+                    setError("Your Google account is disconnected. Please reconnect.");
+                    setShowReconnect(true);
+                    return;
+                }
                 throw new Error(data.error || "Failed to refresh briefing.");
             }
 
@@ -66,10 +79,10 @@ export default function Dashboard() {
 
             setRefreshLimitReached(false);
             setRemainingRefreshes(data.remaining);
-
             setSummary(data.summary);
             setEmailSnippets(data.emailSnippets);
             setEvents(data.events);
+            setShowReconnect(false);
         } catch (err) {
             console.error("Failed to refresh briefing:", err);
             setError('Failed to refresh briefing.');
@@ -110,6 +123,14 @@ export default function Dashboard() {
                 <p style={{ color: 'orange' }}>
                     You&apos;ve used all your daily refreshes. Try again tomorrow or upgrade your plan.
                 </p>
+            )}
+            {showReconnect && (
+                <div style={{ marginTop: 12 }}>
+                    <p style={{ color: 'orange' }}>
+                        Your Google account is disconnected. Please reconnect to continue.
+                    </p>
+                    <button onClick={() => signIn("google")}>Reconnect to Google</button>
+                </div>
             )}
 
             <h2>Summary</h2>
